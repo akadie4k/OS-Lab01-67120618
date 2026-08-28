@@ -1,0 +1,31 @@
+======================================================
+COE67-222 Operating Systems - Lab 04 Report
+Name: Mr.Tanaphat Chuparat
+Student ID: 67120618
+======================================================
+
+1. The Deadlock (Phase 2):
+In the `deadlock_simulation.py` script, explain step-by-step how the "Circular Wait" condition occurred between Model A and Model B.
+- Step 1: Model A started and successfully acquired gpu_0_lock, then entered a brief sleep (simulating processing work).
+- Step 2: During Model A's sleep, the OS scheduler switched context to Model B. Model B started and successfully acquired gpu_1_lock, then also entered a sleep state.
+- Step 3: Model A woke up and requested gpu_1_lock, but was blocked because Model B was holding it.
+- Step 4: Model B woke up and requested gpu_0_lock, but was blocked because Model A was holding it.
+- Result: Model A held GPU 0 while waiting for GPU 1, and Model B held GPU 1 while waiting for GPU 0. This formed a closed circular dependency (Model A -> GPU 1 -> Model B -> GPU 0 -> Model A) where neither process could proceed or release its lock, resulting in a permanent Deadlock.
+
+
+2. The Solution (Phase 3):
+By changing the code in `deadlock_avoidance.py` so that Model B also requests GPU 0 first, how did this specifically break the "Circular Wait" condition? 
+Under this rule, both threads compete for GPU 0 first. Whichever thread wins GPU 0 (e.g., Model A) proceeds to request GPU 1.
+- The losing thread (Model B) is blocked immediately at GPU 0 before it can ever acquire GPU 1.
+- Because Model B is prevented from holding GPU 1 while waiting for GPU 0, the hold-and-wait circular chain is broken. Model A can acquire GPU 1 without contention, complete its work, and release both locks, allowing Model B to execute next smoothly.
+
+3. Starvation vs Deadlock (Phase 4): Based on the results from `starvation_sim.py`: - How is the final output of the Starvation script fundamentally different from the Deadlock script you ran in Phase 2? - In your own words, explain how a process scheduler could use a technique called "Aging" to help the `Polite_Model` get a fair share of CPU time. 
+Fundamental difference in final output: In the Deadlock script, the entire system completely froze, no threads could make any progress, and the program never finished until manually terminated with Ctrl + C. In contrast, in the Starvation script, the system remained active and finished successfully within 3 seconds, but resource allocation was severely unfair (Greedy_Model_A: 23,087 times, Greedy_Model_B: 23,113 times, while Polite_Model: only 296 times).
+- How Aging helps Polite_Model: Aging is an OS scheduling technique where the priority of a process is incrementally increased the longer it waits in the ready queue. If Polite_Model is continuously bypassed by greedy tasks, its priority will gradually rise over time until it exceeds the priority of the greedy tasks, forcing the OS scheduler to grant it resource access and ensuring fair execution without permanent starvation.
+
+4. Deadlock Detection & Recovery (Phase 3.3):
+- How did the `timeout` parameter simulate the Deadlock Detection mechanism of an Operating System?
+- When the Deadlock was detected, what exact step did Model A take to perform "Recovery" and allow the rest of the system to continue?
+- Timeout simulation of Deadlock Detection: The acquire(timeout=TIMEOUT) parameter acts as an OS Watchdog timer. If a thread is blocked waiting for a locked resource beyond a defined threshold (2.0 seconds), the OS infers that a circular wait/deadlock state has likely occurred, rather than letting the thread block indefinitely.
+- Recovery step taken by Model A: When the timeout expired on GPU 1, Model A executed a Rollback by releasing its previously acquired lock (gpu_0_lock.release()) and terminating its current attempt. By yielding GPU 0, Model A eliminated the resource conflict, allowing Model B to acquire GPU 0, finish its training, and unlock the pipeline without requiring manual intervention.
+
