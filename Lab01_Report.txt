@@ -1,16 +1,19 @@
 ======================================================
 COE67-XXX Operating Systems - Lab 01 Report
-Name: 
-Student ID: 
+Name: Mr. Tanaphat Chuparat
+Student ID: 67120618
 ======================================================
 
 1. Hardware Baseline:
-- OS Version:
-- Number of CPU Cores:
-- Total RAM:
+- OS Version: Linux codespaces-4cdfe8 6.8.0-1052-azure #58~22.04.1-Ubuntu
+- Number of CPU Cores: 2 Cores
+- Total RAM: 7.76 GB
 
 2. Observation (from htop during stress test):
-[Write your answer here]
+[Ans : During the CPU stress test (Phase 4), the Python script utilized around 90-100% of ONLY ONE CPU core (specifically Core 2), while the other CPU core remained mostly idle at low usage.
+Explanation: This occurs because standard CPython executes code on a single thread by default and is restricted by the Global Interpreter Lock (GIL). As a result, a single-threaded computational loop runs entirely on one core at a time and cannot automatically distribute its workload across all available CPU cores.]
 
 3. Analysis:
-[Write your answer here]
+[Ans : In the context of Machine Learning workloads handling large datasets (such as 500,000 images):
+- Memory Limits (RAM): Attempting to load 500,000 uncompressed high-resolution images into memory all at once will rapidly exceed the available RAM, causing the OS to trigger an Out Of Memory (OOM) error and terminate the process. Understanding RAM limits is essential for implementing batch-loading pipelines (e.g., PyTorch DataLoader or Generators) to stream and process data in manageable chunks.
+- CPU Core Counts: Data preprocessing operations (such as decoding, resizing, normalization, and data augmentation) are CPU-intensive. Knowing the available CPU core count allows engineers to optimize parallel data loaders by tuning multiprocessing parameters (e.g., setting `num_worker`), which prevents the CPU from becoming a bottleneck during model training.]
