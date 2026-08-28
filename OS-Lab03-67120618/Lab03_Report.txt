@@ -1,0 +1,23 @@
+======================================================
+COE67-222 Operating Systems - Lab 03 Report
+Name: Mr. Tanaphat Chuparat
+Student ID: 67120618
+======================================================
+
+1. The Race Condition (Phase 2):
+In the race_condition.py script, the final weight value was 100 instead of the expected 200 due to a Race Condition caused by non-atomic operations (Read -> Modify -> Write). 
+The OS Scheduler preemptively performed context switches during the simulated delay (time.sleep). When Thread 1 read temp and was suspended before writing back, Thread 2 ran, read the same initial value of shared_weight, modified it, and committed the write. When Thread 1 resumed, it overwrote Thread 2's update with its own stale value. This "lost update" anomaly caused 100 iterations of updates to be completely overwritten.
+
+2. Mutex vs. Semaphore (Phase 3):
+In producer_consumer.py:
+- Specific job of mutex: Enforces Mutual Exclusion by ensuring that only one thread (either Producer or Consumer) can access and modify the shared bounded buffer array and index pointers (in_index, out_index) at any given instant.
+- Specific job of empty and full semaphores: They act as Counting Semaphores for condition synchronization and capacity control. empty tracks the number of free slots and blocks the Producer when the buffer is full (capacity 5). full tracks available data batches and blocks the Consumer when the buffer is empty (count 0).
+- Why we cannot use ONLY a Mutex: A Mutex provides binary locking (locked/unlocked) and cannot track resource quantity or manage conditional waiting. Without semaphores, handling empty or full buffer states would require busy-waiting (polling) or lead to thread locking without an efficient OS signaling mechanism to wake sleeping threads.
+
+3. Deadlock Awareness:
+If the Producer code was swapped to execute mutex.acquire() before empty.acquire() and the buffer became completely full:
+- The Producer would first acquire the mutex, locking the critical section, and then attempt empty.acquire().
+- Because the buffer is full (empty == 0), the Producer is put to sleep by the OS while still holding the mutex.
+- When the Consumer runs to consume an item and free up space, it immediately blocks at its own mutex.acquire() because the sleeping Producer never released the mutex.
+- Both threads become permanently stuck (Producer waiting for empty semaphore; Consumer waiting for mutex). This creates a circular wait, resulting in an OS Deadlock.
+[cite: 4]
